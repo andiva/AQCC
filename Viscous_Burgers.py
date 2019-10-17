@@ -1,5 +1,6 @@
 import numpy as np
 from scipy import sparse
+import sympy
 import matplotlib.pyplot as plt
 import matplotlib
 import progressbar
@@ -14,24 +15,32 @@ dt = 2.5e-4
 dt_map = 1.25e-3
 nu=0.05
 
+is_train_PNN = False # set to True for additional training
+
 x = np.arange(0, 2*np.pi, dx)
 t = np.arange(0, 0.5+dt, dt)
 t_map = np.arange(0, 0.5+dt_map, dt_map)
 
 #-------------------------------------------------------------------------------
-def phi(t, x):
-    return np.exp(-(x-4*t)**2/(4*nu*(t+1))) + np.exp(-(x-4*t-2*np.pi)**2/(4*nu*(t+1)))
+def analytic_method():
+    X, T = sympy.symbols('X T')
+    phi = sympy.exp(-(X - 4 * T)**2 / (4 * nu * (T + 1))) + sympy.exp(-(X - 4 * T - 2 * np.pi)**2 / (4 * nu * (T + 1)))
+    dphidx = phi.diff(X)
 
-def phi_x(t, x):
-    return np.exp(-(x-4*t)**2/(4*nu*(t+1)))*(-2*(x-4*t)/(4*nu*(t+1))) +\
-     np.exp(-(x-4*t-2*np.pi)**2/(4*nu*(t+1)))*(-2*(x-4*t-2*np.pi)/(4*nu*(t+1)))
+    u_analytic_ = -2 * nu / phi * dphidx + 4
+    u_analytic  = sympy.utilities.lambdify((X, T), u_analytic_)
+
+    return u_analytic
+
+
+analytic_solution = analytic_method()
 
 
 def u_analytic(t, x):
     ''' Analytic solution provided as benchmark in Problem Statement
     '''
     #return u_analytic_2(t, x)
-    return (-2*nu*phi_x(t, x)/phi(t, x)+4)
+    return analytic_solution(x, t)
 
 
 def u_analytic_2(t, x):
@@ -177,7 +186,8 @@ def main():
 
 
     weights = get_PNN_weights(N, dt_map)
-    weights = train_PNN(weights)
+    if is_train_PNN:
+        weights = train_PNN(weights)
 
     u_map, elapsed_time = calc_PNN(weights)
 
