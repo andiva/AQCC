@@ -21,7 +21,7 @@ class TaylorMap(Layer):
         nsize = 1
         self.W = []
         self.nsizes = [nsize]
-        for i in xrange(self.order+1):
+        for i in range(self.order+1):
             initial_weight_value = np.zeros((nsize, self.output_dim))
             nsize*=input_dim
             self.nsizes.append(nsize)
@@ -36,7 +36,7 @@ class TaylorMap(Layer):
         ans = self.W[0]
         tmp = x
         x_vectors = tf.expand_dims(x, -1)
-        for i in xrange(1, self.order+1):
+        for i in range(1, self.order+1):
             ans = ans + K.dot(tmp, self.W[i])
             if(i == self.order):
                 continue
